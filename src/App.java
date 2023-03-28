@@ -1,5 +1,8 @@
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -16,7 +19,7 @@ public class App {
         props.load(input);
         
         String API_KEY = props.getProperty("API_KEY");
-        URI endereco = URI.create("https://imdb-api.com/pt-br/API/MostPopularMovies/".concat(API_KEY));
+        URI endereco = URI.create("https://imdb-api.com/en/API/Top250Movies/".concat(API_KEY));
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder(endereco).GET().build();
@@ -28,22 +31,26 @@ public class App {
         List<Map<String, String>> listaDeFilmes = parser.parse(body);
 
         // exibir e manipular os dados
+        GeradoraDeFigurinhas geradora = new GeradoraDeFigurinhas();
+        File diretorio = new File("figurinhas/");
+        diretorio.mkdir();
         for (Map<String,String> filme : listaDeFilmes) {
-            System.out.println("\u001b[1m Dados do Filme: ");
-            System.out.println("Título:" + "\u001b[37;1m \u001b[44;1m" + filme.get("title") + "\u001b[m");
-            System.out.println("Poster: " + filme.get("image"));
-            System.out.print("Rating: ");
-            
-            if (!filme.get("imDbRating").isEmpty()) {
-                double ratingComPontoFlutuante = Double.parseDouble(filme.get("imDbRating"));
-                int rating = (int) ratingComPontoFlutuante;
+            String urlImagemMiniatura = filme.get("image");
+            try {
+                String[] parts = urlImagemMiniatura.split("@(.+?)\\.jpg");
+                String urlImagem = parts[0] + "@.jpg";
+                System.out.println(urlImagem);
+                String titulo = filme.get("title");
+                String nomeDoArquivo = "figurinhas/" + titulo + ".png";
+
+                InputStream inputStream = new URL(urlImagem).openStream();
                 
-                for (int i = 0; i < rating; i++) {
-                    System.out.print("\u2B50");
-                }
+                geradora.cria(inputStream, nomeDoArquivo);    
+            } catch (Exception e) {
+                continue;
             }
             
-            System.out.println("\n");
+                  
         }
     }
 }

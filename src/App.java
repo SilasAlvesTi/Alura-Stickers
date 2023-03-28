@@ -15,8 +15,8 @@ public class App {
         FileInputStream input = new FileInputStream("config.properties");
         props.load(input);
         
-        String url = props.getProperty("FILMES_URL_API");
-        URI endereco = URI.create(url);
+        String API_KEY = props.getProperty("API_KEY");
+        URI endereco = URI.create("https://imdb-api.com/pt-br/API/MostPopularMovies/".concat(API_KEY));
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder(endereco).GET().build();
@@ -32,12 +32,17 @@ public class App {
             System.out.println("\u001b[1m Dados do Filme: ");
             System.out.println("Título:" + "\u001b[37;1m \u001b[44;1m" + filme.get("title") + "\u001b[m");
             System.out.println("Poster: " + filme.get("image"));
-            double ratingComPontoFlutuante = Double.parseDouble(filme.get("imDbRating"));
-            int rating = (int) ratingComPontoFlutuante;
             System.out.print("Rating: ");
-            for (int i = 0; i < rating; i++) {
-                System.out.print("\u2B50");
+            
+            if (!filme.get("imDbRating").isEmpty()) {
+                double ratingComPontoFlutuante = Double.parseDouble(filme.get("imDbRating"));
+                int rating = (int) ratingComPontoFlutuante;
+                
+                for (int i = 0; i < rating; i++) {
+                    System.out.print("\u2B50");
+                }
             }
+            
             System.out.println("\n");
         }
     }

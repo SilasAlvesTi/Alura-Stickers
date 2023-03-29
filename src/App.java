@@ -1,56 +1,50 @@
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 public class App {
     public static void main(String[] args) throws Exception {
         // fazer uma conexão HTTP e buscar os top 250 filmes
         Properties props = new Properties();
-        FileInputStream input = new FileInputStream("config.properties");
-        props.load(input);
-        
-        String API_KEY = props.getProperty("API_KEY");
-        URI endereco = URI.create("https://imdb-api.com/en/API/Top250Movies/".concat(API_KEY));
+        try {
+            FileInputStream input = new FileInputStream("config.properties");
+            props.load(input);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        /* String API_KEY = props.getProperty("API_KEY_IMDB");
+        String url = "https://imdb-api.com/pt-br/API/MostPopularMovies/".concat(API_KEY);
+        ExtratorDeConteudo extrator = new ExtratorDeConteudoDoIMDB(); */
 
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder(endereco).GET().build();
-        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-        String body = response.body();
+        String url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&start_date=2022-06-12&end_date=2022-06-14";
+        ExtratorDeConteudo extrator = new ExtratorDeConteudoDaNasa();
+
+        ClienteHttp http = new ClienteHttp();
         
-        // pegar só os dados que interessam (titulo, poster, classificação)
-        JsonParser parser = new JsonParser();
-        List<Map<String, String>> listaDeFilmes = parser.parse(body);
+        String json = http.buscaDados(url);
+
+        List<Conteudo> conteudos =  extrator.extraiConteudos(json);
 
         // exibir e manipular os dados
         GeradoraDeFigurinhas geradora = new GeradoraDeFigurinhas();
         File diretorio = new File("figurinhas/");
         diretorio.mkdir();
-        for (Map<String,String> filme : listaDeFilmes) {
-            String urlImagemMiniatura = filme.get("image");
-            try {
-                String[] parts = urlImagemMiniatura.split("@(.+?)\\.jpg");
-                String urlImagem = parts[0] + "@.jpg";
-                System.out.println(urlImagem);
-                String titulo = filme.get("title");
-                String nomeDoArquivo = "figurinhas/" + titulo + ".png";
 
-                InputStream inputStream = new URL(urlImagem).openStream();
+        for (int i = 0; i < 3; i++) {
+            try {
+                Conteudo conteudo = conteudos.get(i);
+                String nomeDoArquivo = "figurinhas/" + conteudo.getTitulo() + ".png";
+
+                InputStream inputStream = new URL(conteudo.getUrlImagem()).openStream();
                 
                 geradora.cria(inputStream, nomeDoArquivo);    
             } catch (Exception e) {
-                continue;
+                throw new RuntimeException(e);
             }
-            
-                  
         }
     }
 }

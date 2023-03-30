@@ -37,9 +37,9 @@ public class App {
         for (int i = 0; i < 3; i++) {
             try {
                 Conteudo conteudo = conteudos.get(i);
-                String nomeDoArquivo = "figurinhas/" + conteudo.getTitulo() + ".png";
+                String nomeDoArquivo = "figurinhas/" + conteudo.titulo() + ".png";
 
-                InputStream inputStream = new URL(conteudo.getUrlImagem()).openStream();
+                InputStream inputStream = new URL(conteudo.urlImagem()).openStream();
                 
                 geradora.cria(inputStream, nomeDoArquivo);    
             } catch (Exception e) {
